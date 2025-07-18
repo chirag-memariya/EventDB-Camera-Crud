@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  eventstore:
+    image: eventstore/eventstore:21.10.0-buster-slim
+    environment:
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+    ports:
+      - "2113:2113" # HTTP UI
+      - "1113:1113" # TCP for ClientAPI
+
+  api:
+    build:
+      context: .
+    container_name: camera-crud-api
+    environment:
+      # REMOVED: EVENTSTORE_URI. The C# code now explicitly configures the EventStoreClient.
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "5236:8080" # Map host port 5236 to container port 8080
+    depends_on:
+      - eventstore
+    restart: unless-stopped
